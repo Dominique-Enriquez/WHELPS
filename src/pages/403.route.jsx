@@ -1,0 +1,2 @@
+import Link from 'next/link'
+export default function Forbidden(){return <main className="grid min-h-screen place-items-center bg-cream p-6 text-center"><div><p className="eyebrow">Access denied</p><h1 className="section-title mt-2">Administrator access required</h1><p className="mt-3 text-warm">This area is available only to authorized Whelps administrators.</p><Link href="/" className="btn-primary mt-6">Return Home</Link></div></main>}

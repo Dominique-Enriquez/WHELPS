@@ -1,0 +1,4 @@
+import { db } from '../../../server/db'
+import { requireUser } from '../../../server/auth'
+import { method } from '../../../server/http'
+export default function handler(req,res){if(!method(req,res,['GET']))return;if(!requireUser(req,res,'ADMIN'))return;const feedback=db.prepare('SELECT COUNT(*) total,COALESCE(ROUND(AVG(rating),2),0) average FROM feedback').get(),topics=db.prepare('SELECT topic,COUNT(*) submissions,ROUND(AVG(rating),2) average FROM feedback GROUP BY topic ORDER BY average ASC').all(),applications=db.prepare('SELECT status,COUNT(*) count FROM adoption_applications GROUP BY status').all(),metrics={feedbackTotal:feedback.total,averageRating:feedback.average,completedAdoptions:db.prepare('SELECT COUNT(*) count FROM adoption_placements').get().count,monitoringActivity:db.prepare('SELECT COUNT(*) count FROM monitoring_records').get().count,applications:Object.fromEntries(applications.map(x=>[x.status,x.count])),topics};res.status(200).json({metrics})}

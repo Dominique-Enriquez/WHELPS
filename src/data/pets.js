@@ -1,0 +1,8 @@
+export const pets = [
+  { id: 'max', name: 'Max', image: '/images/pets/max.webp', type: 'Dog', breed: 'Golden Retriever', age: '2 years old', ageGroup: 'Adult', gender: 'Male', fixed: 'Neutered', description: 'A friendly and energetic retriever who loves to play fetch and is great with families and other dogs.' },
+  { id: 'luna', name: 'Luna', image: '/images/pets/luna.webp', type: 'Cat', breed: 'Persian', age: '3 years old', ageGroup: 'Adult', gender: 'Female', fixed: 'Spayed', description: 'A beautiful and affectionate cat who loves cuddles, calm company, and quiet playtime.' },
+  { id: 'buddy', name: 'Buddy', image: '/images/pets/buddy.webp', type: 'Dog', breed: 'Labrador', age: '5 months old', ageGroup: 'Young', gender: 'Male', fixed: 'Neutered', description: 'A loyal, gentle family dog looking for an active home with plenty of love and play.' },
+  { id: 'felix', name: 'Felix', image: '/images/pets/felix.webp', type: 'Cat', breed: 'Tabby', age: '2 years old', ageGroup: 'Adult', gender: 'Male', fixed: 'Neutered', description: 'An easygoing lap cat who enjoys head scratches and casual window-gazing.' },
+  { id: 'rocky', name: 'Rocky', image: '/images/pets/rocky.webp', type: 'Dog', breed: 'Aspín', age: '4 years old', ageGroup: 'Adult', gender: 'Male', fixed: 'Neutered', description: 'An energetic, clever pup who would thrive in an active home with room to run.' },
+  { id: 'bella', name: 'Bella', image: '/images/pets/bella.webp', type: 'Cat', breed: 'Puspin', age: '5 months old', ageGroup: 'Young', gender: 'Female', fixed: 'Spayed', description: 'A confident, patient companion who gets along well with children and other pets.' }
+]
