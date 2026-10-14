@@ -6,8 +6,8 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ImagePlaceholder from '../components/ImagePlaceholder'
 import { useAuth } from '../context/AuthContext'
+import { places } from '../data/places'
 
-const places={ 'Central Luzon':['San Leonardo','Cabanatuan','Gapan'], 'Metro Manila':['Quezon City','Manila','Makati'], 'CALABARZON':['Cavite City','Antipolo','Calamba'] }
 export default function Register(){
   const [show,setShow]=useState(false),[region,setRegion]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false)
   const {register}=useAuth(),router=useRouter()
