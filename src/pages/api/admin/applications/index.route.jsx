@@ -2,6 +2,7 @@ import { db } from '../../../../server/db'
 import { requireUser } from '../../../../server/auth'
 import { clean, method } from '../../../../server/http'
 import { applicationSelect } from '../../../../server/applications'
+import { getAdminStatistics } from '../../../../server/adminDashboard'
 
 export default async function handler(req, res) {
   if (!method(req, res, ['GET'])) return
@@ -22,32 +23,9 @@ export default async function handler(req, res) {
     params.push(`%${search}%`, `%${search}%`, `%${search}%`)
   }
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
-  const [applications, countRows, users, availablePets, adoptedPets, total, healthPending, unreadMessages, pendingMonitoring] = await Promise.all([
+  const [applications, statistics] = await Promise.all([
     db.prepare(applicationSelect(where, sort)).all(...params),
-    db.prepare('SELECT status,COUNT(*) count FROM adoption_applications GROUP BY status').all(),
-    db.prepare("SELECT COUNT(*) count FROM users WHERE role='USER'").get(),
-    db.prepare("SELECT COUNT(*) count FROM pets WHERE availability='Available' AND published=1").get(),
-    db.prepare("SELECT COUNT(*) count FROM pets WHERE availability='Adopted'").get(),
-    db.prepare('SELECT COUNT(*) count FROM adoption_applications').get(),
-    db.prepare("SELECT COUNT(*) count FROM pets WHERE health_verification<>'Verified'").get(),
-    db.prepare('SELECT COUNT(*) count FROM messages WHERE read_at IS NULL').get(),
-    db.prepare("SELECT COUNT(*) count FROM monitoring_records WHERE review_status='Pending Review'").get(),
+    getAdminStatistics(),
   ])
-  const counts = Object.fromEntries(countRows.map(x => [x.status, x.count]))
-  const statistics = {
-    users: users.count,
-    availablePets: availablePets.count,
-    adoptedPets: adoptedPets.count,
-    total: total.count,
-    submitted: counts.Submitted || 0,
-    underReview: counts['Under Review'] || 0,
-    approved: counts['Approved — Awaiting Placement'] || 0,
-    rejected: counts.Rejected || 0,
-    cancelled: counts['Cancelled by Applicant'] || 0,
-    completed: counts['Adoption Completed'] || 0,
-    healthPending: healthPending.count,
-    unreadMessages: unreadMessages.count,
-    pendingMonitoring: pendingMonitoring.count,
-  }
   res.status(200).json({ applications, statistics })
 }
