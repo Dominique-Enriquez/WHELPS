@@ -16,7 +16,7 @@ export default function Dashboard(){
   const closeRef=useRef(null)
   const {user,logout}=useAuth(),router=useRouter()
   const load=()=>fetch('/api/applications').then(r=>r.ok?r.json():Promise.reject()).then(d=>setApplications(d.applications)).catch(()=>router.replace('/login'))
-  useEffect(load,[])
+  useEffect(()=>{load()},[])
   useEffect(()=>{if(!open)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';const key=e=>{if(e.key==='Escape')setOpen(false)};document.addEventListener('keydown',key);setTimeout(()=>closeRef.current?.focus(),0);return()=>{document.body.style.overflow=previous;document.removeEventListener('keydown',key)}},[open])
   const cancel=async()=>{const r=await fetch('/api/applications/'+confirm.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'cancel',version:confirm.version})});const d=await r.json();if(r.ok){setNotice(`Your adoption request for ${confirm.petName} was cancelled.`);setConfirm(null);load()}else setNotice(d.error)}
   const links=[[Home,'Adoptable Pet'],[Heart,'Applications'],[MessageSquare,'Messages'],[Trophy,'Success Stories'],[Settings,'Settings'],[CircleHelp,'How It Works']]
