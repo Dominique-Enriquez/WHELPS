@@ -2,5 +2,46 @@ import { db, makeId } from '../../../server/db'
 import { requireUser } from '../../../server/auth'
 import { clean, method, validEmail, validPhone } from '../../../server/http'
 import { ACTIVE, applicationSelect, history, notify, userStatus } from '../../../server/applications'
-export default function handler(req,res){if(!method(req,res,['GET','POST']))return;const user=requireUser(req,res);if(!user)return;if(req.method==='GET'){const applications=db.prepare(applicationSelect('WHERE a.applicant_user_id=?')).all(user.id);const active=applications.find(app=>ACTIVE.includes(app.status))||null;return res.status(200).json({applications,active})}if(user.role!=='USER')return res.status(403).json({error:'Only adopter accounts may submit applications.'});const b=req.body||{},fields={petId:clean(b.petId),fullName:clean(b.fullName),email:clean(b.email).toLowerCase(),contact:clean(b.contact),address:clean(b.address),reason:clean(b.reason),housingType:clean(b.housingType),petsAllowed:clean(b.petsAllowed),housingDetails:clean(b.housingDetails),incomeRange:clean(b.incomeRange),financialSupport:clean(b.financialSupport),petExperience:clean(b.petExperience),experienceDetails:clean(b.experienceDetails)};if(!fields.petId||!fields.fullName||!validEmail(fields.email)||!validPhone(fields.contact)||!fields.address||!fields.reason||fields.reason.length>500||!fields.housingType||!['Yes','No'].includes(fields.petsAllowed)||!fields.incomeRange||!fields.financialSupport||!['Yes','No'].includes(fields.petExperience)||!fields.experienceDetails)return res.status(400).json({error:'The submitted application is incomplete or invalid.'});const pet=db.prepare('SELECT * FROM pets WHERE id=?').get(fields.petId);if(!pet)return res.status(404).json({error:'Selected pet was not found.'});if(pet.availability!=='Available'||!pet.published)return res.status(409).json({error:`${pet.name} is not currently available for adoption.`});const current=db.prepare(`SELECT a.id,p.name petName FROM adoption_applications a JOIN pets p ON p.id=a.pet_id WHERE a.applicant_user_id=? AND a.status IN (${ACTIVE.map(()=>'?').join(',')})`).get(user.id,...ACTIVE);if(current)return res.status(409).json({error:`You currently have an adoption request for ${current.petName}. Please wait for Whelps to review it or cancel your current request before applying for another pet.`,activeApplication:current});const id=makeId('APP'),now=new Date().toISOString(),latest=userStatus('Submitted',pet.name);try{db.transaction(()=>{db.prepare(`INSERT INTO adoption_applications (id,applicant_user_id,pet_id,full_name,email,contact,address,reason,housing_type,pets_allowed,housing_details,income_range,financial_support,pet_experience,experience_details,status,submitted_at,updated_at,latest_update) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(id,user.id,fields.petId,fields.fullName,fields.email,fields.contact,fields.address,fields.reason,fields.housingType,fields.petsAllowed,fields.housingDetails||null,fields.incomeRange,fields.financialSupport,fields.petExperience,fields.experienceDetails,'Submitted',now,now,latest);history(id,null,'Submitted',user.id,'Application submitted.');db.prepare("SELECT id FROM users WHERE role='ADMIN'").all().forEach(admin=>notify(admin.id,id,'NEW_APPLICATION',`A new adoption application was submitted for ${pet.name}.`))})()}catch(error){if(String(error.message).includes('UNIQUE'))return res.status(409).json({error:'You already have an active adoption application.'});throw error}res.status(201).json({application:db.prepare(applicationSelect('WHERE a.id=?')).get(id)})}
 
+export default async function handler(req, res) {
+  if (!method(req, res, ['GET', 'POST'])) return
+  const user = await requireUser(req, res)
+  if (!user) return
+  if (req.method === 'GET') {
+    const applications = await db.prepare(applicationSelect('WHERE a.applicant_user_id=?')).all(user.id)
+    return res.status(200).json({ applications, active: applications.find(app => ACTIVE.includes(app.status)) || null })
+  }
+  if (user.role !== 'USER') return res.status(403).json({ error: 'Only adopter accounts may submit applications.' })
+
+  const b = req.body || {}
+  const fields = {
+    petId: clean(b.petId), fullName: clean(b.fullName), email: clean(b.email).toLowerCase(), contact: clean(b.contact),
+    address: clean(b.address), reason: clean(b.reason), housingType: clean(b.housingType), petsAllowed: clean(b.petsAllowed),
+    housingDetails: clean(b.housingDetails), incomeRange: clean(b.incomeRange), financialSupport: clean(b.financialSupport),
+    petExperience: clean(b.petExperience), experienceDetails: clean(b.experienceDetails),
+  }
+  if (!fields.petId || !fields.fullName || !validEmail(fields.email) || !validPhone(fields.contact) || !fields.address || !fields.reason || fields.reason.length > 500 || !fields.housingType || !['Yes', 'No'].includes(fields.petsAllowed) || !fields.incomeRange || !fields.financialSupport || !['Yes', 'No'].includes(fields.petExperience) || !fields.experienceDetails) {
+    return res.status(400).json({ error: 'The submitted application is incomplete or invalid.' })
+  }
+  const pet = await db.prepare('SELECT * FROM pets WHERE id=?').get(fields.petId)
+  if (!pet) return res.status(404).json({ error: 'Selected pet was not found.' })
+  if (pet.availability !== 'Available' || !pet.published) return res.status(409).json({ error: `${pet.name} is not currently available for adoption.` })
+  const current = await db.prepare(`SELECT a.id,p.name petName FROM adoption_applications a JOIN pets p ON p.id=a.pet_id WHERE a.applicant_user_id=? AND a.status IN (${ACTIVE.map(() => '?').join(',')})`).get(user.id, ...ACTIVE)
+  if (current) return res.status(409).json({ error: `You currently have an adoption request for ${current.petName}. Please wait for Whelps to review it or cancel your current request before applying for another pet.`, activeApplication: current })
+
+  const id = makeId('APP')
+  const now = new Date().toISOString()
+  const latest = userStatus('Submitted', pet.name)
+  try {
+    await db.transaction(async () => {
+      await db.prepare(`INSERT INTO adoption_applications (id,applicant_user_id,pet_id,full_name,email,contact,address,reason,housing_type,pets_allowed,housing_details,income_range,financial_support,pet_experience,experience_details,status,submitted_at,updated_at,latest_update) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(id, user.id, fields.petId, fields.fullName, fields.email, fields.contact, fields.address, fields.reason, fields.housingType, fields.petsAllowed, fields.housingDetails || null, fields.incomeRange, fields.financialSupport, fields.petExperience, fields.experienceDetails, 'Submitted', now, now, latest)
+      await history(id, null, 'Submitted', user.id, 'Application submitted.')
+      const admins = await db.prepare("SELECT id FROM users WHERE role='ADMIN'").all()
+      await Promise.all(admins.map(admin => notify(admin.id, id, 'NEW_APPLICATION', `A new adoption application was submitted for ${pet.name}.`)))
+    })()
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'You already have an active adoption application.' })
+    throw error
+  }
+  res.status(201).json({ application: await db.prepare(applicationSelect('WHERE a.id=?')).get(id) })
+}

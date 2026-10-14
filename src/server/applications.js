@@ -1,10 +1,38 @@
 import { db, makeId } from './db.js'
-export const ACTIVE=['Submitted','Under Review','Additional Information Required','Approved — Awaiting Placement']
-export const FINAL=['Rejected','Cancelled by Applicant','Adoption Completed']
-export const EVALUATIONS=['Suitable','Needs Clarification','Concern Identified']
-export function applicationSelect(where='',order='a.submitted_at DESC'){return `SELECT a.*,a.applicant_user_id applicantUserId,a.pet_id petId,a.full_name fullName,a.housing_type housingType,a.pets_allowed petsAllowed,a.housing_details housingDetails,a.income_range incomeRange,a.financial_support financialSupport,a.pet_experience petExperience,a.experience_details experienceDetails,a.submitted_at submittedAt,a.updated_at updatedAt,a.cancelled_at cancelledAt,a.decision_at decisionAt,a.latest_update latestUpdate,p.name petName,p.image petImage,p.type petType,p.breed,p.age,p.gender,p.fixed_status fixedStatus,p.vaccination_status vaccinationStatus,p.health_notes healthNotes,p.health_verification healthVerification,p.availability,p.description petDescription,r.housing_evaluation housingEvaluation,r.financial_evaluation financialEvaluation,r.experience_evaluation experienceEvaluation,r.readiness_evaluation readinessEvaluation,r.internal_notes internalNotes,r.decision,r.decision_reason decisionReason,r.reviewed_at reviewedAt,r.decision_at reviewDecisionAt,u.name reviewerName,c.id conversationId FROM adoption_applications a JOIN pets p ON p.id=a.pet_id LEFT JOIN administrative_reviews r ON r.application_id=a.id LEFT JOIN users u ON u.id=r.reviewer_admin_id LEFT JOIN conversations c ON c.application_id=a.id ${where} ORDER BY ${order}`}
-export function history(applicationId,previousStatus,newStatus,updatedBy,reason){db.prepare('INSERT INTO application_status_history (application_id,previous_status,new_status,updated_by,updated_at,reason) VALUES (?,?,?,?,?,?)').run(applicationId,previousStatus,newStatus,updatedBy,new Date().toISOString(),reason||null)}
-export function notify(userId,applicationId,type,message,conversationId=null){db.prepare('INSERT INTO notifications (id,recipient_user_id,application_id,conversation_id,type,message,created_at) VALUES (?,?,?,?,?,?,?)').run(makeId('NTF'),userId,applicationId,conversationId,type,message,new Date().toISOString())}
-export function userStatus(status,petName,extra=''){return ({Submitted:`Your application for ${petName} has been received.`,'Under Review':`Whelps is currently reviewing your application for ${petName}.`,'Additional Information Required':extra||`Whelps needs more information about your application for ${petName}.`,'Approved — Awaiting Placement':`Whelps approved your application for ${petName}. Await placement instructions.`,Rejected:`Your application for ${petName} was not approved.`,'Cancelled by Applicant':`Your adoption request for ${petName} was cancelled.`,'Adoption Completed':`Whelps confirmed the completed adoption of ${petName}.`})[status]}
-export function ensureConversation(application){let id=application.conversationId||db.prepare('SELECT id FROM conversations WHERE application_id=?').get(application.id)?.id;if(id)return id;id=makeId('CONV');const now=new Date().toISOString();db.prepare('INSERT INTO conversations (id,adopter_user_id,application_id,created_at,last_activity_at) VALUES (?,?,?,?,?)').run(id,application.applicantUserId,application.id,now,now);return id}
 
+export const ACTIVE = ['Submitted', 'Under Review', 'Additional Information Required', 'Approved — Awaiting Placement']
+export const FINAL = ['Rejected', 'Cancelled by Applicant', 'Adoption Completed']
+export const EVALUATIONS = ['Suitable', 'Needs Clarification', 'Concern Identified']
+
+export function applicationSelect(where = '', order = 'a.submitted_at DESC') {
+  return `SELECT a.*,a.applicant_user_id applicantUserId,a.pet_id petId,a.full_name fullName,a.housing_type housingType,a.pets_allowed petsAllowed,a.housing_details housingDetails,a.income_range incomeRange,a.financial_support financialSupport,a.pet_experience petExperience,a.experience_details experienceDetails,a.submitted_at submittedAt,a.updated_at updatedAt,a.cancelled_at cancelledAt,a.decision_at decisionAt,a.latest_update latestUpdate,p.name petName,p.image petImage,p.type petType,p.breed,p.age,p.gender,p.fixed_status fixedStatus,p.vaccination_status vaccinationStatus,p.health_notes healthNotes,p.health_verification healthVerification,p.availability,p.description petDescription,r.housing_evaluation housingEvaluation,r.financial_evaluation financialEvaluation,r.experience_evaluation experienceEvaluation,r.readiness_evaluation readinessEvaluation,r.internal_notes internalNotes,r.decision,r.decision_reason decisionReason,r.reviewed_at reviewedAt,r.decision_at reviewDecisionAt,u.name reviewerName,c.id conversationId FROM adoption_applications a JOIN pets p ON p.id=a.pet_id LEFT JOIN administrative_reviews r ON r.application_id=a.id LEFT JOIN users u ON u.id=r.reviewer_admin_id LEFT JOIN conversations c ON c.application_id=a.id ${where} ORDER BY ${order}`
+}
+
+export async function history(applicationId, previousStatus, newStatus, updatedBy, reason) {
+  await db.prepare('INSERT INTO application_status_history (application_id,previous_status,new_status,updated_by,updated_at,reason) VALUES (?,?,?,?,?,?)').run(applicationId, previousStatus, newStatus, updatedBy, new Date().toISOString(), reason || null)
+}
+
+export async function notify(userId, applicationId, type, message, conversationId = null) {
+  await db.prepare('INSERT INTO notifications (id,recipient_user_id,application_id,conversation_id,type,message,created_at) VALUES (?,?,?,?,?,?,?)').run(makeId('NTF'), userId, applicationId, conversationId, type, message, new Date().toISOString())
+}
+
+export function userStatus(status, petName, extra = '') {
+  return ({
+    Submitted: `Your application for ${petName} has been received.`,
+    'Under Review': `Whelps is currently reviewing your application for ${petName}.`,
+    'Additional Information Required': extra || `Whelps needs more information about your application for ${petName}.`,
+    'Approved — Awaiting Placement': `Whelps approved your application for ${petName}. Await placement instructions.`,
+    Rejected: `Your application for ${petName} was not approved.`,
+    'Cancelled by Applicant': `Your adoption request for ${petName} was cancelled.`,
+    'Adoption Completed': `Whelps confirmed the completed adoption of ${petName}.`,
+  })[status]
+}
+
+export async function ensureConversation(application) {
+  let id = application.conversationId || (await db.prepare('SELECT id FROM conversations WHERE application_id=?').get(application.id))?.id
+  if (id) return id
+  id = makeId('CONV')
+  const now = new Date().toISOString()
+  await db.prepare('INSERT INTO conversations (id,adopter_user_id,application_id,created_at,last_activity_at) VALUES (?,?,?,?,?)').run(id, application.applicantUserId, application.id, now, now)
+  return id
+}
