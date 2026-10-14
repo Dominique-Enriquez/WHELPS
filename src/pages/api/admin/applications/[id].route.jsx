@@ -2,11 +2,13 @@ import { db, makeId } from '../../../../server/db'
 import { requireUser } from '../../../../server/auth'
 import { clean, method } from '../../../../server/http'
 import { applicationSelect, EVALUATIONS, ensureConversation, history, notify, userStatus } from '../../../../server/applications'
+import { getAdminStatistics } from '../../../../server/adminDashboard'
 
 export default async function handler(req, res) {
   if (!method(req, res, ['GET', 'PATCH'])) return
   const admin = await requireUser(req, res, 'ADMIN')
   if (!admin) return
+  res.setHeader('Cache-Control', 'private, no-store')
   const app = await db.prepare(applicationSelect('WHERE a.id=?')).get(req.query.id)
   if (!app) return res.status(404).json({ error: 'Application not found.' })
   if (req.method === 'GET') {
@@ -48,9 +50,9 @@ export default async function handler(req, res) {
         await db.prepare('UPDATE conversations SET last_activity_at=?,closed_at=NULL WHERE id=?').run(now, conversationId)
         await change('Additional Information Required', message, message)
       } else if (action === 'approve') {
-        const review = await db.prepare('SELECT * FROM administrative_reviews WHERE application_id=?').get(app.id)
-        if (!review || ![review.housing_evaluation, review.financial_evaluation, review.experience_evaluation, review.readiness_evaluation].every(Boolean)) throw new Error('REVIEW')
+        if (![evaluations.housing, evaluations.financial, evaluations.experience, evaluations.readiness].every(x => EVALUATIONS.includes(x) && x)) throw new Error('REVIEW')
         if (app.availability !== 'Available') throw new Error('PET')
+        await saveReview()
         const conversationId = await ensureConversation(app)
         await db.prepare('UPDATE conversations SET closed_at=NULL WHERE id=?').run(conversationId)
         await change('Approved — Awaiting Placement', 'Approved by Whelps administrator.', userStatus('Approved — Awaiting Placement', app.petName))
@@ -83,5 +85,6 @@ export default async function handler(req, res) {
     const [code, message] = map[error.message] || [500, 'The application could not be updated.']
     return res.status(code).json({ error: message })
   }
-  res.status(200).json({ application: await db.prepare(applicationSelect('WHERE a.id=?')).get(app.id) })
+  const [application,statistics]=await Promise.all([db.prepare(applicationSelect('WHERE a.id=?')).get(app.id),getAdminStatistics()])
+  res.status(200).json({application,statistics})
 }
