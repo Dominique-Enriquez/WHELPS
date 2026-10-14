@@ -36,6 +36,7 @@ export default async function handler(req, res) {
   try {
     await db.transaction(async () => {
       if (app.status === 'Cancelled by Applicant' || app.status === 'Adoption Completed') throw new Error('FINALIZED')
+      if (app.status === 'Approved — Awaiting Placement' && action !== 'saveReview') throw new Error('MONITORING')
       if (action === 'saveReview') {
         if (![evaluations.housing, evaluations.financial, evaluations.experience, evaluations.readiness].every(x => EVALUATIONS.includes(x))) throw new Error('REVIEW')
         await saveReview()
@@ -54,6 +55,8 @@ export default async function handler(req, res) {
         if (app.availability !== 'Available') throw new Error('PET')
         await saveReview()
         const conversationId = await ensureConversation(app)
+        await db.prepare(`INSERT INTO adoption_placements (id,application_id,pet_id,adopter_user_id,recorded_by,adopted_at,status) VALUES (?,?,?,?,?,?,?) ON CONFLICT(application_id) DO UPDATE SET status='Monitoring'`).run(makeId('PLC'), app.id, app.petId, app.applicantUserId, admin.id, now, 'Monitoring')
+        await db.prepare("UPDATE pets SET availability='On Hold',published=0,updated_at=? WHERE id=?").run(now,app.petId)
         await db.prepare('UPDATE conversations SET closed_at=NULL WHERE id=?').run(conversationId)
         await change('Approved — Awaiting Placement', 'Approved by Whelps administrator.', userStatus('Approved — Awaiting Placement', app.petName))
       } else if (action === 'reject') {
@@ -62,12 +65,6 @@ export default async function handler(req, res) {
         await saveReview()
         await change('Rejected', reason, userStatus('Rejected', app.petName))
         await db.prepare('UPDATE conversations SET closed_at=? WHERE application_id=?').run(now, app.id)
-      } else if (action === 'complete') {
-        if (app.status !== 'Approved — Awaiting Placement') throw new Error('NOT_APPROVED')
-        await db.prepare('INSERT INTO adoption_placements (id,application_id,pet_id,adopter_user_id,recorded_by,adopted_at) VALUES (?,?,?,?,?,?)').run(makeId('PLC'), app.id, app.petId, app.applicantUserId, admin.id, now)
-        const petUpdate = await db.prepare("UPDATE pets SET availability='Adopted',published=0,updated_at=? WHERE id=? AND availability='Available'").run(now, app.petId)
-        if (!petUpdate.changes) throw new Error('PET')
-        await change('Adoption Completed', 'Physical placement confirmed.', userStatus('Adoption Completed', app.petName))
       } else {
         throw new Error('ACTION')
       }
@@ -75,10 +72,10 @@ export default async function handler(req, res) {
   } catch (error) {
     const map = {
       FINALIZED: [409, 'Cancelled or completed applications cannot receive review decisions.'],
+      MONITORING: [409, 'This application is approved and in monitoring. Review a monitoring update to complete it.'],
       REVIEW: [400, 'Complete all four human-review criteria first.'],
       REASON: [400, 'A reason or message is required.'],
       PET: [409, 'The selected pet is not available.'],
-      NOT_APPROVED: [409, 'Only an approved application can be completed.'],
       CONFLICT: [409, 'This application changed. Refresh and try again.'],
       ACTION: [400, 'Unsupported action.'],
     }

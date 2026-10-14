@@ -27,6 +27,10 @@ export default async function handler(req, res) {
       await db.transaction(async () => {
         const result = await db.prepare("UPDATE adoption_applications SET status='Cancelled by Applicant',cancelled_at=?,updated_at=?,latest_update=?,version=version+1 WHERE id=? AND version=?").run(now, now, latest, app.id, version)
         if (!result.changes) throw new Error('CONFLICT')
+        if (app.status === 'Approved — Awaiting Placement') {
+          await db.prepare("UPDATE adoption_placements SET status='Cancelled' WHERE application_id=? AND status='Monitoring'").run(app.id)
+          await db.prepare("UPDATE pets SET availability='Available',published=CASE WHEN health_verification='Verified' THEN 1 ELSE 0 END,updated_at=? WHERE id=? AND availability='On Hold'").run(now, app.petId)
+        }
         await history(app.id, app.status, 'Cancelled by Applicant', user.id, 'Cancelled by applicant.')
         const admins = await db.prepare("SELECT id FROM users WHERE role='ADMIN'").all()
         await Promise.all(admins.map(admin => notify(admin.id, app.id, 'APPLICATION_CANCELLED', `${app.fullName} cancelled the adoption request for ${app.petName}.`)))

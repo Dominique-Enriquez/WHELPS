@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import BrandLogo from './BrandLogo'
 import { useAuth } from '../context/AuthContext'
 
-const links=[['/admin/dashboard',Gauge,'Dashboard'],['/admin/pets',PawPrint,'Available Pets'],['/admin/adopted-pets',HeartHandshake,'Adopted Pets'],['/admin/applications',ClipboardList,'Adoption Applications'],['/admin/messages',MessageSquare,'Messages'],['/admin/evaluation',ShieldCheck,'System Evaluation'],['/admin/settings',Settings,'Settings'],['/admin/profile',UserRound,'Administrator Profile']]
+const links=[['/admin/dashboard',Gauge,'Dashboard'],['/admin/pets',PawPrint,'Available Pets'],['/admin/adopted-pets',HeartHandshake,'Monitoring & Adopted'],['/admin/applications',ClipboardList,'Adoption Applications'],['/admin/messages',MessageSquare,'Messages'],['/admin/evaluation',ShieldCheck,'System Evaluation'],['/admin/settings',Settings,'Settings'],['/admin/profile',UserRound,'Administrator Profile']]
 export default function AdminShell({children,title,subtitle}){
   const router=useRouter(),{user,logout}=useAuth(),[open,setOpen]=useState(false),closeRef=useRef(null)
   useEffect(()=>{setOpen(false)},[router.asPath])

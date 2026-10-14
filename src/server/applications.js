@@ -21,7 +21,7 @@ export function userStatus(status, petName, extra = '') {
     Submitted: `Your application for ${petName} has been received.`,
     'Under Review': `Whelps is currently reviewing your application for ${petName}.`,
     'Additional Information Required': extra || `Whelps needs more information about your application for ${petName}.`,
-    'Approved — Awaiting Placement': `Whelps approved your application for ${petName}. Await placement instructions.`,
+    'Approved — Awaiting Placement': `Whelps approved your application for ${petName}. Submit monitoring updates while Whelps follows the placement.`,
     Rejected: `Your application for ${petName} was not approved.`,
     'Cancelled by Applicant': `Your adoption request for ${petName} was cancelled.`,
     'Adoption Completed': `Whelps confirmed the completed adoption of ${petName}.`,
