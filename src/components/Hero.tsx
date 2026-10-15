@@ -1,7 +1,8 @@
 import ImagePlaceholder from './ImagePlaceholder'
 import SiteImage from './SiteImage'
+import type { ReactNode } from 'react'
 
-export default function Hero({ title, subtitle, children, compact = false, imageSrc, imageAlt = '', imageClassName = '' }) {
+export default function Hero({ title, subtitle, children, compact = false, imageSrc, imageAlt = '', imageClassName = '' }: {title: string; subtitle?: string; children?: ReactNode; compact?: boolean; imageSrc?: string; imageAlt?: string; imageClassName?: string}) {
   return (
     <section className={`relative isolate overflow-hidden ${compact ? 'min-h-[390px]' : 'min-h-[620px]'} flex items-center justify-center bg-brown text-center text-white`}>
       {imageSrc ? <SiteImage src={imageSrc} alt={imageAlt} priority className="!absolute inset-0 h-full w-full" imageClassName={imageClassName} /> : <ImagePlaceholder className="absolute inset-0 h-full w-full opacity-35" rounded="rounded-none"/>}

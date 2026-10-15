@@ -1,5 +1,5 @@
-import { db } from './db.js'
-import { applicationSelect } from './applications.js'
+import { db } from './db'
+import { applicationSelect } from './applications'
 
 const number=value=>Number(value||0)
 

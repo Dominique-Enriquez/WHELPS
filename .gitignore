@@ -3,6 +3,7 @@ node_modules/
 .data/
 dist/
 .env*.local
+*.tsbuildinfo
 
 .env
 .env.local

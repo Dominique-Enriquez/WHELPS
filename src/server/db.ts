@@ -25,7 +25,7 @@ const getClient = () => {
 const health = globalThis.__whelpsPostgresHealth || { checkedAt: 0, promise: null }
 globalThis.__whelpsPostgresHealth = health
 
-const transactionContext = new AsyncLocalStorage()
+const transactionContext = new AsyncLocalStorage<any>()
 const HEALTH_TTL_MS = 5000
 const HEALTH_TIMEOUT_MS = 1500
 

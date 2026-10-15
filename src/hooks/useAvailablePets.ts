@@ -4,7 +4,7 @@ const normalize=pet=>({...pet,fixed:pet.fixedStatus,ageGroup:/month|week|day/i.t
 
 export function useAvailablePets(){
   const [pets,setPets]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('')
-  const load=useCallback(async signal=>{
+  const load=useCallback(async (signal?: AbortSignal)=>{
     setLoading(true);setError('')
     try{
       const response=await fetch('/api/pets',{signal})

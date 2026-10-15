@@ -1,4 +1,4 @@
-import { db, makeId } from './db.js'
+import { db, makeId } from './db'
 
 export const ACTIVE = ['Submitted', 'Under Review', 'Additional Information Required', 'Approved — Awaiting Placement']
 export const FINAL = ['Rejected', 'Cancelled by Applicant', 'Adoption Completed']

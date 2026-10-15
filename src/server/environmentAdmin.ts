@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
-import { db, makeId } from './db.js'
-import { hashPassword, publicUser } from './auth.js'
-import { validEmail } from './http.js'
+import { db, makeId } from './db'
+import { hashPassword, publicUser } from './auth'
+import { validEmail } from './http'
 
 const safeEqual=(left,right)=>crypto.timingSafeEqual(crypto.createHash('sha256').update(left).digest(),crypto.createHash('sha256').update(right).digest())
 

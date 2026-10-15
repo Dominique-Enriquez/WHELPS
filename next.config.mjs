@@ -6,7 +6,7 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: projectRoot,
-  pageExtensions: ['route.jsx'],
+  pageExtensions: ['route.ts', 'route.tsx'],
   reactStrictMode: true
 }
 

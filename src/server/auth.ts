@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { promisify } from 'node:util'
-import { db } from './db.js'
+import { db } from './db'
 
 const scrypt = promisify(crypto.scrypt)
 const COOKIE = 'whelps_session'
@@ -8,14 +8,14 @@ const DAYS = 7
 
 export async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex')
-  const derived = await scrypt(password, salt, 64)
+  const derived = await scrypt(password, salt, 64) as Buffer
   return `scrypt:${salt}:${Buffer.from(derived).toString('hex')}`
 }
 
 export async function verifyPassword(password, stored) {
   const [, salt, expected] = String(stored).split(':')
   if (!salt || !expected) return false
-  const actual = await scrypt(password, salt, 64)
+  const actual = await scrypt(password, salt, 64) as Buffer
   return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(actual))
 }
 
@@ -49,7 +49,7 @@ export async function getSessionUser(req) {
   return (await db.prepare(`SELECT u.id,u.name,u.email,u.role,u.phone,u.region,u.city FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?`).get(digest(token), new Date().toISOString())) || null
 }
 
-export async function requireUser(req, res, role) {
+export async function requireUser(req, res, role?: string) {
   const user = await getSessionUser(req)
   if (!user) {
     res.status(401).json({ error: 'Authentication required.' })

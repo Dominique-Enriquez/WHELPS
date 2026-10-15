@@ -1,4 +1,5 @@
 import { Bell, Heart, Home, LogOut, Menu, MessageSquare, Search, Settings, X } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -13,7 +14,7 @@ import { useAuth } from '../context/AuthContext'
 import { useAvailablePets } from '../hooks/useAvailablePets'
 
 const cancellable=['Submitted','Under Review','Additional Information Required','Approved — Awaiting Placement']
-const links=[[Home,'pets','Adoptable Pets'],[Heart,'applications','Applications'],[MessageSquare,'messages','Messages'],[Settings,'settings','Settings']]
+const links: [LucideIcon, string, string][]=[[Home,'pets','Adoptable Pets'],[Heart,'applications','Applications'],[MessageSquare,'messages','Messages'],[Settings,'settings','Settings']]
 
 export default function Dashboard(){
   const [open,setOpen]=useState(false),[detail,setDetail]=useState(null),[apply,setApply]=useState(false),[applications,setApplications]=useState([]),[confirm,setConfirm]=useState(null),[notice,setNotice]=useState(''),[view,setView]=useState('pets'),[query,setQuery]=useState('')

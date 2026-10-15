@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2, FileText, Heart, MessageCircle } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -8,7 +9,7 @@ import DonationBanner from '../components/DonationBanner'
 import { pets } from '../data/pets'
 
 const stats = [['10', 'Pets Available'], ['55', 'Successfully Adopted'], ['89', 'Happy Families'], ['100%', 'Verified & Healthy Pets']]
-const benefits = [[CheckCircle2, 'Verified Pets', 'Every pet is health-checked, vaccinated, and ready for adoption.'], [FileText, 'Professional Screening', 'Thoughtful assessment helps each pet reach the right home.'], [MessageCircle, 'Direct Support', 'Guidance from Whelps staff throughout your journey.'], [Heart, 'Lifetime Commitment', 'Support that continues after adoption day.']]
+const benefits: [LucideIcon, string, string][] = [[CheckCircle2, 'Verified Pets', 'Every pet is health-checked, vaccinated, and ready for adoption.'], [FileText, 'Professional Screening', 'Thoughtful assessment helps each pet reach the right home.'], [MessageCircle, 'Direct Support', 'Guidance from Whelps staff throughout your journey.'], [Heart, 'Lifetime Commitment', 'Support that continues after adoption day.']]
 
 export default function Home() {
   return <div className="bg-white">

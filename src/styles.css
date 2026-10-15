@@ -103,6 +103,19 @@
   .chat-bubble.admin { @apply self-end bg-orange/15; }
 }
 
+.page-transition { opacity: 1; transition: opacity 165ms ease-in-out; }
+.page-transition--exiting { opacity: .08; transition-duration: 145ms; pointer-events: none; }
+.page-transition--pre-enter { opacity: .08; transition: none; pointer-events: none; }
+.page-transition--entering { opacity: 1; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .page-transition,
+  .page-transition--exiting,
+  .page-transition--pre-enter,
+  .page-transition--entering { transition-duration: 1ms !important; }
+}
+
 @media (max-width: 640px) {
   .display-title { font-size: clamp(2.6rem, 14vw, 3.35rem); }
   .section-title { font-size: clamp(2rem, 10vw, 2.35rem); }

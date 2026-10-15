@@ -1,4 +1,5 @@
 import { ChevronDown, HandHeart, HeartHandshake, Megaphone, ShieldCheck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
@@ -15,7 +16,7 @@ const faqs = [
 
 export default function OurStory(){
   const [open,setOpen]=useState(0)
-  const actions=[[ShieldCheck,'Promote Spaying and Neutering'],[HeartHandshake,'Practice Responsible Pet Ownership'],[Megaphone,'Speak Up Against Cruelty'],[HandHeart,'Support Local Shelters']]
+  const actions: [LucideIcon, string][]=[[ShieldCheck,'Promote Spaying and Neutering'],[HeartHandshake,'Practice Responsible Pet Ownership'],[Megaphone,'Speak Up Against Cruelty'],[HandHeart,'Support Local Shelters']]
   return <><Navbar overlay/><Hero compact imageSrc="/images/banners/our-story-dogs.webp" imageAlt="Dogs gathered for animal welfare care" title="Where Happy Beginnings Start"/><main>
     <section className="section bg-mist"><div className="site-container grid gap-12 lg:grid-cols-[.8fr_1.2fr]"><SiteImage src="/images/story/whelps-team.jpg" alt="Whelps team with rescued dogs" className="min-h-[430px] rounded-2xl" sizes="(max-width: 1024px) 100vw, 40vw"/><div><h2 className="section-title">Our Story</h2><p className="mt-5 leading-relaxed text-warm">Driven by a shared mission to protect vulnerable animals, FurYou was developed as a dedicated digital platform in partnership with Whelps—an initiative born from a refusal to stand by while abused, abandoned, and neglected dogs and cats go without help.</p><p className="mt-4 leading-relaxed text-warm">Together, we bridge rescue and rehabilitation with responsible families, making adoption more accessible while keeping animal welfare at the center of every decision.</p></div></div>
       <div className="site-container mt-12 grid gap-4 md:grid-cols-4">{actions.map(([Icon,t])=><div className="rounded-3xl border-2 border-orange bg-white p-6 text-center" key={t}><Icon className="mx-auto text-orange"/><h3 className="mt-3 font-display text-xl font-bold">{t}</h3></div>)}</div>

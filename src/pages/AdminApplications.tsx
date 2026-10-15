@@ -9,8 +9,8 @@ const finalStatuses = ['Rejected', 'Cancelled by Applicant', 'Adoption Completed
 const prettyDate = value => value ? new Date(value).toLocaleString() : '—'
 
 export default function AdminApplications() {
-  const [data, setData] = useState({ applications: [], statistics: {} })
-  const [selected, setSelected] = useState(null)
+  const [data, setData] = useState<any>({ applications: [], statistics: {} })
+  const [selected, setSelected] = useState<any>(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('All Applications')
   const [error, setError] = useState('')
@@ -127,7 +127,7 @@ function ApplicationDetail({ application, busy, error, field, act, close }) {
       <div className="flex flex-col gap-4 min-[430px]:flex-row"><SiteImage src={application.petImage} alt={application.petName} className="h-52 w-full shrink-0 rounded-2xl min-[430px]:h-28 min-[430px]:w-28" sizes="(max-width: 429px) 100vw, 112px" /><div className="min-w-0"><h3 className="font-display text-3xl font-black">{application.petName}</h3><p className="text-warm">{application.breed} · {application.age} · {application.fixedStatus}</p><p className="mt-2 text-sm">{application.petDescription}</p></div></div>
       <Info title="Applicant Information" icon={UserRound} rows={[["Full Name", application.fullName], ["Email", application.email], ["Contact", application.contact], ["Address", application.address], ["Reason for Adoption", application.reason]]} />
       <Info title="Capability Assessment" rows={[["Housing", `${application.housingType}; pets allowed: ${application.petsAllowed}`], ["Housing details", application.housingDetails || 'Not provided'], ["Income", application.incomeRange], ["Financial support", application.financialSupport], ["Previous experience", `${application.petExperience}: ${application.experienceDetails}`]]} />
-      <div className="rounded-2xl bg-cream p-4"><h3 className="font-black">Administrative Review</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{[['housingEvaluation', 'Housing'], ['financialEvaluation', 'Financial preparedness'], ['experienceEvaluation', 'Pet-care experience'], ['readinessEvaluation', 'Overall readiness']].map(([key, label]) => <label key={key} className="text-sm">{label}<select value={application[key] || ''} onChange={event => field(key, event.target.value)}>{evaluationOptions.map(option => <option key={option} value={option}>{option || 'Select evaluation'}</option>)}</select></label>)}</div><label className="mt-3 block text-sm">Internal notes<textarea rows="3" value={application.internalNotes || ''} onChange={event => field('internalNotes', event.target.value)} placeholder="Private review notes…" /></label></div>
+      <div className="rounded-2xl bg-cream p-4"><h3 className="font-black">Administrative Review</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{[['housingEvaluation', 'Housing'], ['financialEvaluation', 'Financial preparedness'], ['experienceEvaluation', 'Pet-care experience'], ['readinessEvaluation', 'Overall readiness']].map(([key, label]) => <label key={key} className="text-sm">{label}<select value={application[key] || ''} onChange={event => field(key, event.target.value)}>{evaluationOptions.map(option => <option key={option} value={option}>{option || 'Select evaluation'}</option>)}</select></label>)}</div><label className="mt-3 block text-sm">Internal notes<textarea rows={3} value={application.internalNotes || ''} onChange={event => field('internalNotes', event.target.value)} placeholder="Private review notes…" /></label></div>
       {awaitingMonitoring && <p className="rounded-xl bg-green-50 p-4 text-sm font-bold text-green-800">Approved and under monitoring. Review adopter updates in Monitoring &amp; Adopted, then explicitly complete the adoption when the monitoring period is finished.</p>}
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{error}</p>}
       <div className="grid gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
@@ -138,10 +138,10 @@ function ApplicationDetail({ application, busy, error, field, act, close }) {
   </section>
 }
 
-function Stat({ icon: Icon, label, tone = 'orange', active, onClick }) {
+function Stat({ icon: Icon, label, tone = 'orange', active = false, onClick }: any) {
   return <button onClick={onClick} className={`admin-stat ${active ? 'active' : ''}`}><span className={`stat-icon ${tone}`}><Icon /></span><b>{label}</b></button>
 }
 
-function Info({ title, icon: Icon, rows }) {
-  return <div className="rounded-2xl bg-mist p-4"><h3 className="flex items-center gap-2 font-black">{Icon && <Icon size={20} />} {title}</h3><dl className="mt-3 grid gap-3 sm:grid-cols-2">{rows.map(([key, value]) => <div key={key} className={key.includes('Address') || key.includes('Reason') ? 'sm:col-span-2' : ''}><dt className="text-xs font-bold text-warm">{key}</dt><dd className="mt-1 rounded-xl bg-white p-3 text-sm">{value}</dd></div>)}</dl></div>
+function Info({ title, icon: Icon, rows }: any) {
+  return <div className="rounded-2xl bg-mist p-4"><h3 className="flex items-center gap-2 font-black">{Icon && <Icon size={20} />} {title}</h3><dl className="mt-3 grid gap-3 sm:grid-cols-2">{rows.map(([key, value]: [string, string]) => <div key={key} className={key.includes('Address') || key.includes('Reason') ? 'sm:col-span-2' : ''}><dt className="text-xs font-bold text-warm">{key}</dt><dd className="mt-1 rounded-xl bg-white p-3 text-sm">{value}</dd></div>)}</dl></div>
 }
