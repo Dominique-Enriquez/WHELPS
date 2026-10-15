@@ -10,35 +10,22 @@ export default async function handler(req, res) {
   if (!user) return
   res.setHeader('Cache-Control', 'private, no-store')
 
-  const [
-    applications,
-    statistics,
-    pets,
-    monitoringRecords,
-    placements,
-    conversations,
-    feedback,
-    topics,
-    applicationOutcomes,
-    completed,
-    monitoringActivity,
-    monthlyApplications,
-    monthlyAdoptions,
-  ] = await Promise.all([
-    db.prepare(applicationSelect('', 'a.submitted_at DESC')).all(),
-    getAdminStatistics(),
-    db.prepare('SELECT *,fixed_status fixedStatus,vaccination_status vaccinationStatus,health_notes healthNotes,health_verification healthVerification,created_at createdAt,updated_at updatedAt FROM pets ORDER BY updated_at DESC').all(),
-    db.prepare('SELECT m.*,m.placement_id placementId,m.pet_condition petCondition,m.feeding_update feedingUpdate,m.health_observations healthObservations,m.behavior_update behaviorUpdate,m.submitted_at submittedAt,m.review_status reviewStatus,m.admin_notes adminNotes,pl.status placementStatus,p.name petName,p.image petImage,u.name adopterName FROM monitoring_records m JOIN adoption_placements pl ON pl.id=m.placement_id JOIN pets p ON p.id=pl.pet_id JOIN users u ON u.id=pl.adopter_user_id ORDER BY m.submitted_at DESC').all(),
-    db.prepare("SELECT pl.id,pl.status,p.name petName,p.image petImage,a.status applicationStatus,u.name adopterName FROM adoption_placements pl JOIN adoption_applications a ON a.id=pl.application_id JOIN pets p ON p.id=pl.pet_id JOIN users u ON u.id=pl.adopter_user_id WHERE pl.status='Monitoring' ORDER BY pl.adopted_at DESC").all(),
-    db.prepare('SELECT c.id,c.application_id applicationId,c.adopter_user_id adopterUserId,c.created_at createdAt,c.last_activity_at lastActivityAt,c.closed_at closedAt,u.name adopterName,u.email,p.id petId,p.name petName,p.image petImage,p.breed,a.status,(SELECT content FROM messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1) lastMessage,(SELECT created_at FROM messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1) lastMessageAt,(SELECT COUNT(*) FROM messages WHERE conversation_id=c.id AND sender_user_id<>? AND read_at IS NULL) unreadCount FROM conversations c JOIN users u ON u.id=c.adopter_user_id JOIN adoption_applications a ON a.id=c.application_id JOIN pets p ON p.id=a.pet_id ORDER BY c.last_activity_at DESC').all(user.id),
-    db.prepare('SELECT COUNT(*) total,COALESCE(ROUND(AVG(rating),2),0) average FROM feedback').get(),
-    db.prepare('SELECT topic,COUNT(*) submissions,ROUND(AVG(rating),2) average FROM feedback GROUP BY topic ORDER BY average ASC').all(),
-    db.prepare('SELECT status,COUNT(*) count FROM adoption_applications GROUP BY status').all(),
-    db.prepare('SELECT COUNT(*) count FROM adoption_placements').get(),
-    db.prepare('SELECT COUNT(*) count FROM monitoring_records').get(),
-    db.prepare("SELECT to_char(date_trunc('month',submitted_at),'YYYY-MM-01') month,COUNT(*) count FROM adoption_applications WHERE submitted_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all(),
-    db.prepare("SELECT to_char(date_trunc('month',decision_at),'YYYY-MM-01') month,COUNT(*) count FROM adoption_applications WHERE status='Adoption Completed' AND decision_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all(),
-  ])
+  // Vercel functions use a deliberately small Supabase transaction pool.
+  // Keep this request on one connection instead of queueing a burst of
+  // concurrent statements against that pool.
+  const applications = await db.prepare(applicationSelect('', 'a.submitted_at DESC')).all()
+  const statistics = await getAdminStatistics()
+  const pets = await db.prepare('SELECT *,fixed_status fixedStatus,vaccination_status vaccinationStatus,health_notes healthNotes,health_verification healthVerification,created_at createdAt,updated_at updatedAt FROM pets ORDER BY updated_at DESC').all()
+  const monitoringRecords = await db.prepare('SELECT m.*,m.placement_id placementId,m.pet_condition petCondition,m.feeding_update feedingUpdate,m.health_observations healthObservations,m.behavior_update behaviorUpdate,m.submitted_at submittedAt,m.review_status reviewStatus,m.admin_notes adminNotes,pl.status placementStatus,p.name petName,p.image petImage,u.name adopterName FROM monitoring_records m JOIN adoption_placements pl ON pl.id=m.placement_id JOIN pets p ON p.id=pl.pet_id JOIN users u ON u.id=pl.adopter_user_id ORDER BY m.submitted_at DESC').all()
+  const placements = await db.prepare("SELECT pl.id,pl.status,p.name petName,p.image petImage,a.status applicationStatus,u.name adopterName FROM adoption_placements pl JOIN adoption_applications a ON a.id=pl.application_id JOIN pets p ON p.id=pl.pet_id JOIN users u ON u.id=pl.adopter_user_id WHERE pl.status='Monitoring' ORDER BY pl.adopted_at DESC").all()
+  const conversations = await db.prepare('SELECT c.id,c.application_id applicationId,c.adopter_user_id adopterUserId,c.created_at createdAt,c.last_activity_at lastActivityAt,c.closed_at closedAt,u.name adopterName,u.email,p.id petId,p.name petName,p.image petImage,p.breed,a.status,(SELECT content FROM messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1) lastMessage,(SELECT created_at FROM messages WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1) lastMessageAt,(SELECT COUNT(*) FROM messages WHERE conversation_id=c.id AND sender_user_id<>? AND read_at IS NULL) unreadCount FROM conversations c JOIN users u ON u.id=c.adopter_user_id JOIN adoption_applications a ON a.id=c.application_id JOIN pets p ON p.id=a.pet_id ORDER BY c.last_activity_at DESC').all(user.id)
+  const feedback = await db.prepare('SELECT COUNT(*) total,COALESCE(ROUND(AVG(rating),2),0) average FROM feedback').get()
+  const topics = await db.prepare('SELECT topic,COUNT(*) submissions,ROUND(AVG(rating),2) average FROM feedback GROUP BY topic ORDER BY average ASC').all()
+  const applicationOutcomes = await db.prepare('SELECT status,COUNT(*) count FROM adoption_applications GROUP BY status').all()
+  const completed = await db.prepare('SELECT COUNT(*) count FROM adoption_placements').get()
+  const monitoringActivity = await db.prepare('SELECT COUNT(*) count FROM monitoring_records').get()
+  const monthlyApplications = await db.prepare("SELECT to_char(date_trunc('month',submitted_at),'YYYY-MM-01') month,COUNT(*) count FROM adoption_applications WHERE submitted_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all()
+  const monthlyAdoptions = await db.prepare("SELECT to_char(date_trunc('month',decision_at),'YYYY-MM-01') month,COUNT(*) count FROM adoption_applications WHERE status='Adoption Completed' AND decision_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all()
 
   res.status(200).json({
     applications,
