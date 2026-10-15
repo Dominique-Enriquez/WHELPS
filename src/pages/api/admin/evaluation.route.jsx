@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     db.prepare('SELECT status,COUNT(*) count FROM adoption_applications GROUP BY status').all(),
     db.prepare('SELECT COUNT(*) count FROM adoption_placements').get(),
     db.prepare('SELECT COUNT(*) count FROM monitoring_records').get(),
-    db.prepare("SELECT to_char(date_trunc('month',submitted_at),'YYYY-MM-01') month,COUNT(*) count FROM adoption_applications WHERE submitted_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all(),
-    db.prepare("SELECT to_char(date_trunc('month',decision_at),'YYYY-MM-01') month,COUNT(*) count FROM adoption_applications WHERE status='Adoption Completed' AND decision_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all(),
+    db.prepare("SELECT to_char(date_trunc('month',submitted_at),'YYYY-MM-01') AS month,COUNT(*) AS count FROM adoption_applications WHERE submitted_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all(),
+    db.prepare("SELECT to_char(date_trunc('month',decision_at),'YYYY-MM-01') AS month,COUNT(*) AS count FROM adoption_applications WHERE status='Adoption Completed' AND decision_at>=date_trunc('month',CURRENT_DATE)-INTERVAL '11 months' GROUP BY 1 ORDER BY 1").all(),
   ])
   res.status(200).json({ metrics: {
     feedbackTotal: feedback.total,
