@@ -20,9 +20,8 @@ export async function authenticateEnvironmentAdmin(email,password){
   if(!safeEqual(password,configured.password))return false
   const existing=await db.prepare('SELECT id,role FROM users WHERE email=?').get(configured.email)
   if(existing&&existing.role!=='ADMIN')throw new Error('WHELPS_ADMIN_EMAIL belongs to an adopter account. Configure a different administrator email.')
-  const passwordHash=await hashPassword(configured.password)
-  if(existing)await db.prepare('UPDATE users SET name=?,password_hash=? WHERE id=?').run(configured.name,passwordHash,existing.id)
-  else await db.prepare('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)').run(makeId('ADM'),configured.name,configured.email,passwordHash,'ADMIN',new Date().toISOString())
+  if(existing)await db.prepare('UPDATE users SET name=? WHERE id=?').run(configured.name,existing.id)
+  else await db.prepare('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)').run(makeId('ADM'),configured.name,configured.email,await hashPassword(configured.password),'ADMIN',new Date().toISOString())
   const admin=await db.prepare('SELECT id,name,email,role,phone,region,city FROM users WHERE email=?').get(configured.email)
   return publicUser(admin)
 }
