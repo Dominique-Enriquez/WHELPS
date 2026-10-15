@@ -10,7 +10,7 @@ export default function AdminDashboard({initialData=null,initialError=''}){
   const load=useCallback(async({silent=false}={})=>{
     if(!silent)setLoading(true)
     setError('')
-    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000)
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000)
     try{
       const response=await fetch('/api/admin/applications',{cache:'no-store',signal:controller.signal})
       const body=await response.json().catch(()=>({}))

@@ -18,7 +18,7 @@ export default function AdminApplications() {
 
   const load = useCallback(async () => {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000)
+    const timeout = setTimeout(() => controller.abort(), 15000)
     try {
       const params = new URLSearchParams({ search, status })
       const response = await fetch('/api/admin/applications?' + params, { cache: 'no-store', signal: controller.signal })
