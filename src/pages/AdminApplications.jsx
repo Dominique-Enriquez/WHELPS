@@ -35,11 +35,10 @@ export default function AdminApplications() {
   }, [search, status])
 
   useEffect(() => {
-    const first = setTimeout(load, 150)
+    load()
     const interval = setInterval(load, 10000)
     window.addEventListener('focus', load)
     return () => {
-      clearTimeout(first)
       clearInterval(interval)
       window.removeEventListener('focus', load)
     }

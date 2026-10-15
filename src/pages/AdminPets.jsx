@@ -13,12 +13,14 @@ export default function AdminPets({ adopted = false }) {
   const load = useCallback(async () => {
     setError('')
     try {
-      const petResponse = await fetch('/api/admin/pets', { cache: 'no-store' })
+      const [petResponse, monitoringResponse] = await Promise.all([
+        fetch('/api/admin/pets', { cache: 'no-store' }),
+        adopted ? fetch('/api/monitoring', { cache: 'no-store' }) : Promise.resolve(null),
+      ])
       const petData = await petResponse.json().catch(() => ({}))
       if (!petResponse.ok) throw new Error(petData.error || 'Pet records could not be loaded.')
       setPets((petData.pets || []).filter(pet => adopted ? pet.availability === 'Adopted' : pet.availability !== 'Adopted'))
       if (adopted) {
-        const monitoringResponse = await fetch('/api/monitoring', { cache: 'no-store' })
         const monitoringData = await monitoringResponse.json().catch(() => ({}))
         if (!monitoringResponse.ok) throw new Error(monitoringData.error || 'Monitoring records could not be loaded.')
         setRecords(monitoringData.records || [])

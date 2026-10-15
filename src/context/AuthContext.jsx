@@ -9,10 +9,13 @@ async function request(url, options = {}) {
   return data
 }
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  useEffect(() => { request('/api/auth/me').then(data => setUser(data.user)).catch(() => setUser(null)).finally(() => setLoading(false)) }, [])
+export function AuthProvider({ children, initialUser = null }) {
+  const [user, setUser] = useState(initialUser)
+  const [loading, setLoading] = useState(!initialUser)
+  useEffect(() => {
+    if (initialUser) return
+    request('/api/auth/me').then(data => setUser(data.user)).catch(() => setUser(null)).finally(() => setLoading(false))
+  }, [initialUser])
   const value = useMemo(() => ({
     user, loading,
     login: async (email, password) => { const data = await request('/api/auth/login', { method:'POST', body:JSON.stringify({ email, password }) }); setUser(data.user); return data.user },

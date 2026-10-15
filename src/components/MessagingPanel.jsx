@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import SiteImage from './SiteImage'
 
 export default function MessagingPanel({compact=false}){const [conversations,setConversations]=useState([]),[selected,setSelected]=useState(null),[messages,setMessages]=useState([]),[search,setSearch]=useState(''),[filter,setFilter]=useState('all'),[text,setText]=useState(''),[error,setError]=useState(''),end=useRef(null)
+  const firstLoad=useRef(true)
   const loadConversations=async()=>{const r=await fetch(`/api/conversations?filter=${filter}&search=${encodeURIComponent(search)}`);if(r.ok){const d=await r.json();setConversations(d.conversations);setSelected(old=>d.conversations.find(x=>x.id===old?.id)||null)}}
-  useEffect(()=>{const timer=setTimeout(loadConversations,150);return()=>clearTimeout(timer)},[filter,search])
+  useEffect(()=>{if(firstLoad.current){firstLoad.current=false;loadConversations();return}const timer=setTimeout(loadConversations,150);return()=>clearTimeout(timer)},[filter,search])
   useEffect(()=>{if(!selected)return;fetch(`/api/conversations/${selected.id}/messages`).then(r=>r.json()).then(d=>setMessages(d.messages||[]))},[selected?.id])
   useEffect(()=>end.current?.scrollIntoView({behavior:'smooth'}),[messages])
   const send=async e=>{e.preventDefault();if(!text.trim()||!selected)return;setError('');const r=await fetch(`/api/conversations/${selected.id}/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:text,clientRequestId:crypto.randomUUID()})});const d=await r.json();if(!r.ok)setError(d.error);else{setMessages(m=>[...m,d.message]);setText('');loadConversations()}}
