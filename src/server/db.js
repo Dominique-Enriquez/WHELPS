@@ -79,7 +79,11 @@ function compile(source) {
 
 function restoreAliases(rows, aliases) {
   if (!aliases.length) return rows
-  return rows.map(row => {
+  const restore = value => {
+    if (Array.isArray(value)) return value.map(restore)
+    if (!value || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) return value
+    const row = value
+    for (const key of Object.keys(row)) row[key] = restore(row[key])
     for (const alias of aliases) {
       const folded = alias.toLowerCase()
       if (folded in row && !(alias in row)) {
@@ -88,7 +92,8 @@ function restoreAliases(rows, aliases) {
       }
     }
     return row
-  })
+  }
+  return rows.map(restore)
 }
 
 async function execute(source, parameters) {
