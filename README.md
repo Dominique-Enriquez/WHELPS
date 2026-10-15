@@ -4,6 +4,11 @@ WHELPS is a Next.js adoption-management application backed by PostgreSQL. The da
 
 ## Local development
 
+The Flutter client uses these server API routes and receives a mobile Bearer
+session when it sends `X-Whelps-Client: mobile`. Configure allowed Flutter web
+origins with `MOBILE_APP_ORIGINS` (comma-separated). Keep `DATABASE_URL` and all
+administrator secrets on the server; they must never be compiled into Flutter.
+
 Requirements: Node.js, Docker Desktop, and the Supabase CLI (the npm scripts can invoke a locally installed CLI).
 
 ```bash
