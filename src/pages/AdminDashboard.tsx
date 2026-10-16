@@ -1,5 +1,5 @@
 import { ClipboardList, HeartHandshake, MessageSquare, PawPrint, RefreshCw, Users } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import AdminShell from '../components/AdminShell'
 
@@ -7,24 +7,28 @@ const empty={applications:[],statistics:{}}
 
 export default function AdminDashboard({initialData=null,initialError=''}){
   const [data,setData]=useState<any>(initialData||empty),[loading,setLoading]=useState(!initialData),[error,setError]=useState(initialError),[updatedAt,setUpdatedAt]=useState(initialData?new Date():null)
+  const requestRef=useRef<AbortController|null>(null)
   const load=useCallback(async({silent=false}={})=>{
+    if(requestRef.current)return
     if(!silent)setLoading(true)
     setError('')
-    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000)
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000)
+    requestRef.current=controller
     try{
-      const response=await fetch('/api/admin/applications',{cache:'no-store',signal:controller.signal})
+      const response=await fetch('/api/admin/dashboard',{cache:'no-store',signal:controller.signal})
       const body=await response.json().catch(()=>({}))
       if(!response.ok)throw new Error(body.error||'Dashboard data could not be loaded.')
       setData({applications:Array.isArray(body.applications)?body.applications:[],statistics:body.statistics||{}})
       setUpdatedAt(new Date())
-    }catch(err){setError(err.name==='AbortError'?'The live refresh timed out. The last confirmed statistics are still shown.':err.message)}finally{clearTimeout(timeout);setLoading(false)}
+    }catch(err){setError(err.name==='AbortError'?'The live refresh timed out. The last confirmed statistics are still shown.':err.message)}finally{clearTimeout(timeout);requestRef.current=null;setLoading(false)}
   },[])
   useEffect(()=>{
     if(!initialData)load()
-    const interval=setInterval(()=>load({silent:true}),10000)
-    const refresh=()=>load({silent:true})
+    const refresh=()=>{if(document.visibilityState==='visible')load({silent:true})}
+    const interval=setInterval(refresh,30000)
     window.addEventListener('focus',refresh)
-    return()=>{clearInterval(interval);window.removeEventListener('focus',refresh)}
+    document.addEventListener('visibilitychange',refresh)
+    return()=>{clearInterval(interval);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);requestRef.current?.abort()}
   },[initialData,load])
   const s=data.statistics
   const cards: any[]=[[Users,'Adopter Accounts',s.users],[PawPrint,'Available Pets',s.availablePets],[ClipboardList,'Applications',s.total],[HeartHandshake,'Completed Adoptions',s.completed],[MessageSquare,'Unread Messages',s.unreadMessages]]
