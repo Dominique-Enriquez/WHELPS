@@ -46,7 +46,7 @@ export async function clearSession(req, res) {
 export async function getSessionUser(req) {
   const token = readSessionToken(req)
   if (!token) return null
-  return (await db.prepare(`SELECT u.id,u.name,u.email,u.role,u.phone,u.region,u.city FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?`).get(digest(token), new Date().toISOString())) || null
+  return (await db.prepare(`SELECT u.id,u.name,u.email,u.role,u.phone,u.region,u.city,u.account_status,u.verification_status,u.organization_name FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.deleted_at IS NULL AND u.account_status='active'`).get(digest(token), new Date().toISOString())) || null
 }
 
 export async function requireUser(req, res, role?: string) {
@@ -62,5 +62,5 @@ export async function requireUser(req, res, role?: string) {
   return user
 }
 
-export const publicUser = user => user && ({ id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, region: user.region, city: user.city })
+export const publicUser = user => user && ({ id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, region: user.region, city: user.city, verificationStatus:user.verification_status, organizationName:user.organization_name })
 export const mobileSession = (req, token) => String(req.headers['x-whelps-client'] || '').toLowerCase() === 'mobile' ? { sessionToken: token } : {}

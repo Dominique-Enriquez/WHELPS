@@ -1,0 +1,6 @@
+import crypto from 'node:crypto'
+import { db } from '../../../server/db'
+import { hashPassword } from '../../../server/auth'
+import { method } from '../../../server/http'
+const digest=value=>crypto.createHash('sha256').update(value).digest('hex')
+export default async function handler(req,res){if(!method(req,res,['POST']))return;const token=String(req.body?.token||''),password=String(req.body?.password||'');if(!token||password.length<12)return res.status(400).json({error:'Use a password of at least 12 characters.'});const row=await db.prepare('SELECT user_id userId FROM password_reset_tokens WHERE token_hash=? AND used_at IS NULL AND expires_at>?').get(digest(token),new Date().toISOString());if(!row)return res.status(400).json({error:'This reset link is invalid or expired.'});await db.transaction(async()=>{await db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(await hashPassword(password),row.userId);await db.prepare('UPDATE password_reset_tokens SET used_at=? WHERE token_hash=?').run(new Date().toISOString(),digest(token));await db.prepare('DELETE FROM sessions WHERE user_id=?').run(row.userId)})();res.status(200).json({message:'Password updated. You can now sign in.'})}

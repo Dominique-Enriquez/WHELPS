@@ -1,4 +1,4 @@
-import { Bell, Heart, Home, LogOut, Menu, MessageSquare, Search, Settings, X } from 'lucide-react'
+import { Bell, Heart, Home, LogOut, Menu, MessageSquare, PawPrint, Search, Settings, ShieldCheck, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -12,9 +12,10 @@ import UserSettings from '../components/UserSettings'
 import AdoptionMonitoring from '../components/AdoptionMonitoring'
 import { useAuth } from '../context/AuthContext'
 import { useAvailablePets } from '../hooks/useAvailablePets'
+import { FavoritesPanel, NotificationsPanel, RehomePanel, TrustPanel } from '../components/WebsiteFeatures'
 
 const cancellable=['Submitted','Under Review','Additional Information Required','Approved — Awaiting Placement']
-const links: [LucideIcon, string, string][]=[[Home,'pets','Adoptable Pets'],[Heart,'applications','Applications'],[MessageSquare,'messages','Messages'],[Settings,'settings','Settings']]
+const links: [LucideIcon, string, string][]=[[Home,'pets','Adoptable Pets'],[Heart,'favorites','Saved Pets'],[Heart,'applications','Applications'],[PawPrint,'rehome','Rehome a Pet'],[MessageSquare,'messages','Messages'],[Bell,'notifications','Notifications'],[Settings,'settings','Settings'],[ShieldCheck,'trust','Trust & Safety']]
 
 export default function Dashboard(){
   const [open,setOpen]=useState(false),[detail,setDetail]=useState(null),[apply,setApply]=useState(false),[applications,setApplications]=useState([]),[confirm,setConfirm]=useState(null),[notice,setNotice]=useState(''),[view,setView]=useState('pets'),[query,setQuery]=useState('')
@@ -32,12 +33,16 @@ export default function Dashboard(){
   return <div className="min-h-screen overflow-x-hidden bg-mist md:grid md:grid-cols-[280px_1fr]">
     {open&&<button className="dashboard-overlay md:hidden" onClick={()=>setOpen(false)} aria-label="Close user navigation"/>}
     <aside className={`dashboard-sidebar ${open?'translate-x-0':'-translate-x-full'} md:translate-x-0`} aria-label="User navigation"><div className="flex items-center justify-between"><BrandLogo/><button ref={closeRef} onClick={()=>setOpen(false)} className="grid h-11 w-11 place-items-center md:hidden" aria-label="Close user navigation"><X/></button></div><nav className="mt-10 space-y-2">{links.map(([Icon,id,label])=><button key={id} className={`sidebar-link ${view===id?'active':''}`} aria-current={view===id?'page':undefined} onClick={()=>changeView(id)}><Icon size={20}/>{label}</button>)}</nav><div className="mt-auto border-t border-brown/30 pt-5"><div className="flex items-center gap-3"><span className="avatar">{user?.name?.[0]||'A'}</span><div className="min-w-0"><b className="block truncate">{user?.name||'Adopter'}</b><p className="text-xs text-warm">Adopter</p></div><button onClick={async()=>{await logout();router.push('/')}} className="ml-auto grid h-11 w-11 place-items-center" aria-label="Log out"><LogOut size={18}/></button></div></div></aside>
-    <main className="min-w-0"><header className="flex min-h-20 items-center gap-2 px-4 sm:gap-4 md:h-24 md:px-10"><button className="grid h-11 w-11 shrink-0 place-items-center md:hidden" onClick={()=>setOpen(true)} aria-label="Open user navigation" aria-expanded={open}><Menu/></button>{view==='pets'?<label className="search-box min-w-0 flex-1"><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search adoptable pets" aria-label="Search adoptable pets"/></label>:<div className="flex-1"/>}<button className="icon-btn shrink-0" aria-label="Notifications"><Bell/></button><Link href="/donate" className="btn-primary hidden shrink-0 sm:inline-flex">Donate <Heart size={16} className="fill-white"/></Link></header>
-      <div className="px-4 pb-12 sm:px-5 md:px-10"><section className="rounded-[2rem] bg-white p-6 sm:p-8 md:max-w-xl"><p className="eyebrow">Welcome, {user?.name||'Adopter'}!</p><h1 className="font-display text-2xl font-bold sm:text-3xl">{view==='applications'?'Track your adoption journey.':view==='messages'?'Stay connected with Whelps.':view==='settings'?'Manage your account.':'Ready to find your new best friend?'}</h1></section>{notice&&<p className="mt-5 rounded-xl bg-orange/10 p-4 font-bold text-brown">{notice}</p>}
+    <main className="min-w-0"><header className="flex min-h-20 items-center gap-2 px-4 sm:gap-4 md:h-24 md:px-10"><button className="grid h-11 w-11 shrink-0 place-items-center md:hidden" onClick={()=>setOpen(true)} aria-label="Open user navigation" aria-expanded={open}><Menu/></button>{view==='pets'?<label className="search-box min-w-0 flex-1"><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search adoptable pets" aria-label="Search adoptable pets"/></label>:<div className="flex-1"/>}<button onClick={()=>changeView('notifications')} className="icon-btn shrink-0" aria-label="Notifications"><Bell/></button><Link href="/donate" className="btn-primary hidden shrink-0 sm:inline-flex">Donate <Heart size={16} className="fill-white"/></Link></header>
+      <div className="px-4 pb-12 sm:px-5 md:px-10"><section className="rounded-[2rem] bg-white p-6 sm:p-8 md:max-w-xl"><p className="eyebrow">Welcome, {user?.name||'Adopter'}!</p><h1 className="font-display text-2xl font-bold sm:text-3xl">{view==='applications'?'Track your adoption journey.':view==='messages'?'Stay connected with Whelps.':view==='rehome'?'Help a pet find a responsible new home.':view==='trust'?'Manage trust, safety, and privacy.':view==='settings'?'Manage your account.':'Ready to find your new best friend?'}</h1></section>{notice&&<p className="mt-5 rounded-xl bg-orange/10 p-4 font-bold text-brown">{notice}</p>}
         {visitedViews.has('pets')&&<div hidden={view!=='pets'}><PetsView pets={visiblePets} loading={petsLoading} error={petsError} reload={reloadPets} show={show} clearSearch={()=>setQuery('')}/></div>}
         {visitedViews.has('applications')&&<div hidden={view!=='applications'}><ApplicationsView applications={applications} openMessages={()=>changeView('messages')} setConfirm={setConfirm}/></div>}
+        {visitedViews.has('favorites')&&<div hidden={view!=='favorites'}><FavoritesPanel/></div>}
+        {visitedViews.has('rehome')&&<div hidden={view!=='rehome'}><RehomePanel/></div>}
         {visitedViews.has('messages')&&<section hidden={view!=='messages'} className="mt-8"><h2 className="section-title mb-5">Messages</h2><MessagingPanel compact/></section>}
+        {visitedViews.has('notifications')&&<div hidden={view!=='notifications'}><NotificationsPanel/></div>}
         {visitedViews.has('settings')&&<div hidden={view!=='settings'}><UserSettings/></div>}
+        {visitedViews.has('trust')&&<div hidden={view!=='trust'}><TrustPanel/></div>}
       </div>
     </main>
     {detail&&<PetDetailModal key={`${detail.id}-${apply}`} pet={detail} initialApply={apply} onClose={()=>{setDetail(null);setApply(false)}}/>}

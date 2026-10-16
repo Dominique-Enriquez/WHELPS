@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
-export type AuthUser = { id: string | number; name: string; email: string; role: string; phone?: string; region?: string; city?: string }
+export type AuthUser = { id: string | number; name: string; email: string; role: string; phone?: string; region?: string; city?: string; verificationStatus?: string; organizationName?: string }
 type AuthValue = { user: AuthUser | null; loading: boolean; login: (email: string, password: string) => Promise<AuthUser>; register: (fields: Record<string, unknown>) => Promise<AuthUser>; logout: () => Promise<void>; refreshUser: () => Promise<AuthUser> }
 const AuthContext = createContext<AuthValue | null>(null)
 

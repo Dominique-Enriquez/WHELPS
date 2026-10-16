@@ -1,0 +1,4 @@
+import { db, makeId } from '../../server/db'
+import { getSessionUser } from '../../server/auth'
+import { clean, method } from '../../server/http'
+export default async function handler(req,res){if(!method(req,res,['POST']))return;const user=await getSessionUser(req),category=clean(req.body?.category),location=clean(req.body?.location),details=clean(req.body?.details);if(!category||!location||details.length<20||details.length>2000)return res.status(400).json({error:'Choose a category and provide a location and at least 20 characters of detail.'});const id=makeId('RPT'),now=new Date().toISOString();await db.prepare('INSERT INTO welfare_reports (id,reported_by,category,location,details,created_at,updated_at) VALUES (?,?,?,?,?,?,?)').run(id,user?.id||null,category,location,details,now,now);res.status(201).json({id,message:'Your welfare report was received for human review.'})}

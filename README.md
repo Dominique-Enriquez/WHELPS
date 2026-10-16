@@ -37,4 +37,10 @@ Run `npm run db:check` with `DATABASE_URL` configured to verify the deployed sch
 
 The runtime client uses TLS, disables prepared statements for Supavisor transaction mode, and reuses a small connection pool. All application tables have RLS enabled and grants to Supabase's `anon` and `authenticated` Data API roles revoked; application access is only through the server-side API routes.
 
+## Website feature modules
+
+The website includes persistent saved pets, actionable notifications, supporting adoption documents, human-reviewed rehoming intake, organization verification, animal-welfare reporting, account recovery/deletion, user moderation, report investigation, and administrator audit logs. Apply every committed migration before deploying these modules.
+
+Password recovery uses the Resend HTTPS API when `RESEND_API_KEY`, `WHELPS_FROM_EMAIL`, and `NEXT_PUBLIC_SITE_URL` are configured. In local development without email configuration, the recovery page exposes the generated development-only reset link.
+
 For migrations or native PostgreSQL tools, use the direct connection or Supavisor session mode rather than the transaction-pooler URI.

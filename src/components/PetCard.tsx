@@ -9,8 +9,8 @@ export default function PetCard({ pet, onDetails, compact = false }) {
   const { user } = useAuth()
   const key = `favorite-${pet.id}`
   const [favorite, setFavorite] = useState(false)
-  useEffect(() => { setFavorite(localStorage.getItem(key) === '1') }, [key])
-  const toggle = () => { const next = !favorite; setFavorite(next); localStorage.setItem(key, next ? '1' : '0') }
+  useEffect(() => { if(!user){setFavorite(localStorage.getItem(key) === '1');return}fetch('/api/favorites').then(r=>r.ok?r.json():Promise.reject()).then(d=>setFavorite((d.pets||[]).some(p=>p.id===pet.id))).catch(()=>{}) }, [key,pet.id,user])
+  const toggle = async () => { const next = !favorite; setFavorite(next);if(!user){localStorage.setItem(key,next?'1':'0');return}const response=await fetch('/api/favorites',{method:next?'POST':'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({petId:pet.id})});if(!response.ok)setFavorite(!next) }
   return (
     <article className="pet-card">
       <div className={`relative ${compact ? 'h-48' : 'h-56'}`}>{pet.image ? <SiteImage src={pet.image} alt={`Sample adoptable ${pet.type.toLowerCase()} ${pet.name}`} className="h-full w-full rounded-t-[1.75rem]" sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"/> : <ImagePlaceholder className="h-full w-full" rounded="rounded-t-[1.75rem] rounded-b-none"/>}<span className="pet-chip">{pet.breed}</span><button onClick={toggle} className="favorite" aria-label={`${favorite ? 'Remove' : 'Add'} ${pet.name} ${favorite ? 'from' : 'to'} favorites`}><Heart className={favorite ? 'fill-orange text-orange' : ''}/></button></div>

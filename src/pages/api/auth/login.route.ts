@@ -10,8 +10,9 @@ export default async function handler(req,res){
     const environmentAdmin=await authenticateEnvironmentAdmin(email,password)
     if(environmentAdmin){const token=await createSession(res,environmentAdmin.id);return res.status(200).json({user:environmentAdmin,...mobileSession(req,token)})}
     if(environmentAdmin===false)return res.status(401).json({error:'Invalid email address or password.'})
-    const user=await db.prepare('SELECT * FROM users WHERE email=?').get(email)
+    const user=await db.prepare('SELECT * FROM users WHERE email=? AND deleted_at IS NULL').get(email)
     if(!user||user.role==='ADMIN'||!(await verifyPassword(password,user.password_hash)))return res.status(401).json({error:'Invalid email address or password.'})
+    if(user.account_status!=='active')return res.status(403).json({error:'This account is not currently active. Contact WHELPS support if you believe this is a mistake.'})
     const token=await createSession(res,user.id)
     return res.status(200).json({user:publicUser(user),...mobileSession(req,token)})
   }catch(error){

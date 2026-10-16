@@ -1,4 +1,4 @@
-import { Bell, ClipboardList, Gauge, HeartHandshake, LogOut, Menu, MessageSquare, PawPrint, Settings, ShieldCheck, UserRound, X } from 'lucide-react'
+import { Bell, ClipboardList, Gauge, HeartHandshake, ListChecks, LogOut, Menu, MessageSquare, PawPrint, Settings, ShieldCheck, UserRound, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useRef, useState } from 'react'
@@ -7,7 +7,7 @@ import type { LucideIcon } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 import { useAuth } from '../context/AuthContext'
 
-const links: [string, LucideIcon, string][]=[['/admin/dashboard',Gauge,'Dashboard'],['/admin/pets',PawPrint,'Available Pets'],['/admin/adopted-pets',HeartHandshake,'Monitoring & Adopted'],['/admin/applications',ClipboardList,'Adoption Applications'],['/admin/messages',MessageSquare,'Messages'],['/admin/evaluation',ShieldCheck,'System Evaluation'],['/admin/settings',Settings,'Settings'],['/admin/profile',UserRound,'Administrator Profile']]
+const links: [string, LucideIcon, string][]=[['/admin/dashboard',Gauge,'Dashboard'],['/admin/pets',PawPrint,'Available Pets'],['/admin/adopted-pets',HeartHandshake,'Monitoring & Adopted'],['/admin/applications',ClipboardList,'Adoption Applications'],['/admin/operations',ListChecks,'Operations & Safety'],['/admin/messages',MessageSquare,'Messages'],['/admin/evaluation',ShieldCheck,'System Evaluation'],['/admin/settings',Settings,'Settings'],['/admin/profile',UserRound,'Administrator Profile']]
 export default function AdminShell({children,title,subtitle,actions}: {children: ReactNode; title: string; subtitle?: string; actions?: ReactNode}){
   const router=useRouter(),{user,logout}=useAuth(),[open,setOpen]=useState(false),closeRef=useRef<HTMLButtonElement>(null)
   useEffect(()=>{setOpen(false)},[router.asPath])
