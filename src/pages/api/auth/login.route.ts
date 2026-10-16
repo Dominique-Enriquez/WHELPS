@@ -1,6 +1,7 @@
 import { db } from '../../../server/db'
 import { createSession, mobileSession, publicUser, verifyPassword } from '../../../server/auth'
 import { authenticateEnvironmentAdmin } from '../../../server/environmentAdmin'
+import { environmentAdminTargets } from '../../../server/environmentAdminConfig'
 import { clean, method, validEmail } from '../../../server/http'
 export default async function handler(req,res){
   if(!method(req,res,['POST']))return
@@ -17,7 +18,7 @@ export default async function handler(req,res){
     return res.status(200).json({user:publicUser(user),...mobileSession(req,token)})
   }catch(error){
     console.error('Login configuration error:',error)
-    return res.status(500).json({error:'Administrator login is not configured correctly.'})
+    return res.status(500).json({error:environmentAdminTargets(email)?'Administrator login is not configured correctly.':'Sign in is temporarily unavailable. Please try again.'})
   }
 }
 
